@@ -19,3 +19,9 @@ Whackamole game in the brower using HTML and JS.
         - disappear on click
         - increase score on click
         - disappear after a timer
+
+## Nice to have
+
+- Make the cursor a hammer 
+	- only when the game is running 
+- Faster spawns 

@@ -11,7 +11,9 @@ let scoreDisplayText = document.getElementById("currentGameScore");
 let highscoreDisplayText = document.getElementById("highScoreDisplay");
 let timerDisplayText = document.getElementById("currentTimeRemaining");
 let gameRunningInfoContainer = document.getElementById("gameRunningInfo");
-let gamePlayContainer = document.getElementById("gamePlayArea");
+let gamePlayContainer = document.getElementById("gameplayArea");
+let spawnableAreas = document.getElementsByClassName("whackamoleSpawnArea");
+let spawningInterval = null;
 
 
 // because of function hoisting, we can call these functions before they are declared!
@@ -19,6 +21,23 @@ let gamePlayContainer = document.getElementById("gamePlayArea");
 toggleGameControlButtons();
 toggleGamePlayContent();
 updateHighScore();
+
+Array.from(spawnableAreas).forEach(area => {
+	area.addEventListener("click", (event) => {
+		whackamoleHandleClick(event);
+	});
+});
+
+
+function toggleCursor(){
+    let bodyElement = document.getElementsByTagName("body")[0];
+    if (gameTimeRemaining > 0){
+        bodyElement.style.cursor = 'url(./assets/cursorhammer.gif), auto';
+    } else {
+        bodyElement.style.cursor = "";
+    }
+}
+
 
 // Game Score and Timer
 
@@ -32,6 +51,58 @@ function gameTimeStep(){
     // update the highscore based on score ASAP
     updateHighScore();
 }
+
+
+
+async function spawnMole(){
+    // pick a random spawnable area
+    let randomNumberWithinArrayRange = Math.floor(Math.random() * spawnableAreas.length);
+    let chosenSpawnArea = spawnableAreas[randomNumberWithinArrayRange];
+
+    // grab an image from PokeAPI
+    let randomPokemonNumber = Math.floor(Math.random() * 1025) + 1;    
+    let apiRespone = await fetch("https://pokeapi.co/api/v2/pokemon/" + randomPokemonNumber);
+    let apiData = await apiRespone.json();
+
+    // create img with src from pokeAPI
+    // let whackamoleImage = document.createElement("img");
+    // whackamoleImage.src = apiData.sprites.other.home.front_default;
+
+    // put img into spawnable area
+    chosenSpawnArea.src = apiData.sprites.other.home.front_default;
+
+    // chosenSpawnArea.appendChild(whackamoleImage);
+}
+
+function wipeImagesFromSpawningAreas(){
+	// loop through spawnableAreas
+	// set the src property of each thing to ""
+	console.log(spawnableAreas);
+	Array.from(spawnableAreas).forEach(area => {
+		area.src = "";
+	});
+}
+
+function whackamoleHandleClick(event){
+	if (event.target.src != ""){
+		currentGameScore++;
+		event.target.src = "";
+		console.log("Clicked on a mole! Score increased, it's now: " + currentGameScore);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function toggleGamePlayContent(){
@@ -115,10 +186,14 @@ function startGame(desiredGameTime = defaultGameDuration){
     // isGameRunning = true;
     console.log("Started the game. Game time remaining is now: " + gameTimeRemaining);
     
+    currentGameScore = 0;
+    wipeImagesFromSpawningAreas();
     // toggle game controls
     toggleGameControlButtons();
     // toggle game content
     toggleGamePlayContent();
+    // toggle the cursor
+    toggleCursor();
 
     gameCountdownInterval = setInterval(() => {
         gameTimeRemaining -= 1;
@@ -134,6 +209,12 @@ function startGame(desiredGameTime = defaultGameDuration){
     }, 1000);
 
     gameUpdateInterval = setInterval(gameTimeStep, 100);
+
+    // TODO: Refactor for multiple spawningIntervals or find a way to make it
+    // a different duration on each repetition
+    spawningInterval = setInterval(() => {
+        spawnMole();
+    }, 1000);
 }
 
 // startGame(); // gameTimeRemaining becomes 120
@@ -145,19 +226,23 @@ function stopGame(){
     // stop all intervals
     clearInterval(gameCountdownInterval);
     clearInterval(gameUpdateInterval);
+    clearInterval(spawningInterval);
     gameTimeStep();
 
     // toggle game controls
     toggleGameControlButtons();
     // toggle game content
-    toggleGamePlayContent();
+    // toggleGamePlayContent();
+    wipeImagesFromSpawningAreas();
+    // toggle the cursor
+    toggleCursor();
 
     console.log("Stopped the game. Game time remaining is now: " + gameTimeRemaining);
 }
 
 
 startGameButton.addEventListener("click", () => {
-    startGame(3);
+    startGame(10);
 });
 
 
