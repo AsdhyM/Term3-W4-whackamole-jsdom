@@ -57,6 +57,11 @@ function gameTimeStep(){
 
 
 async function spawnMole(){
+    // handle the bug where a pokemon appears once after the game is over
+    if (gameTimeRemaining <= 0){
+        return;
+    }
+
     // pick a random spawnable area
     let randomNumberWithinArrayRange = Math.floor(Math.random() * spawnableAreas.length);
     let chosenSpawnArea = spawnableAreas[randomNumberWithinArrayRange];
@@ -244,6 +249,7 @@ function stopGame(){
     clearInterval(gameUpdateInterval);
     clearInterval(spawningInterval);
     clearInterval(fastSpawningInterval);
+    clearInterval(despawnerInterval);
     gameTimeStep();
 
     // toggle game controls
